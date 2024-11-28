@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+//계정 테이블 모델
+model Account {
+  id          Int      @id @default(autoincrement()) @map("id")             
+  username    String   @unique                       @map("username")       
+  password    String                               @map("password")      
+  email       String   @unique                       @map("email")          
+  createdAt   DateTime @default(now())               @map("created_at")    
+  updatedAt   DateTime @updatedAt                    @map("updated_at")      
+  characters  Character[]                            
+}
+
+//캐릭터 테이블 모델
+model Character {
+  id          Int          @id @default(autoincrement()) @map("id")          
+  name        String       @unique                       @map("name")       
+  health      Int          @default(500)                 @map("health")     
+  power       Int          @default(100)                 @map("power")      
+  money       Int          @default(10000)               @map("money")       
+  accountId   Int                                       @map("account_id")  
+  account     Account      @relation(fields: [accountId], references: [id]) 
+  inventory   Inventory[]                             
+  equipped    EquippedItem[]                           
+  createdAt   DateTime     @default(now())               @map("created_at") 
+  updatedAt   DateTime     @updatedAt                    @map("updated_at")  
+}
+
+//아이템 테이블 모델
+model Item {
+  id          Int          @id @default(autoincrement()) @map("id")          
+  code        Int          @unique                       @map("code")       
+  name        String                                     @map("name")       
+  stats       Json                                      @map("stats")       
+  price       Int                                       @map("price")       
+  inventory   Inventory[]                              
+  equipped    EquippedItem[]                           
+  createdAt   DateTime     @default(now())               @map("created_at")  
+  updatedAt   DateTime     @updatedAt                    @map("updated_at")  
+}
+
+//인벤토리 테이블 모델
+model Inventory {
+  id          Int          @id @default(autoincrement()) @map("id")          
+  characterId Int                                       @map("character_id")
+  itemId      Int                                       @map("item_id")     
+  character   Character     @relation(fields: [characterId], references: [id]) 
+  item        Item          @relation(fields: [itemId], references: [id])      
+  createdAt   DateTime      @default(now())               @map("created_at")  
+}
+
+//착용아이템 테이블 모델
+model EquippedItem {
+  id          Int          @id @default(autoincrement()) @map("id")         
+  characterId Int                                       @map("character_id")
+  itemId      Int                                       @map("item_id")     
+  character   Character     @relation(fields: [characterId], references: [id]) 
+  item        Item          @relation(fields: [itemId], references: [id])     
+  createdAt   DateTime      @default(now())               @map("created_at") 
+}
+
