@@ -157,16 +157,23 @@ const updateItemSchema = Joi.object({
     health: Joi.number().integer(),
     power: Joi.number().integer(),
   }),
-  price: Joi.number().positive(),
 });
 
 // 아이템 수정 API
-router.put('/item', async (req, res, next) => {
+router.put('/item/:code', async (req, res, next) => {
   try {
+    // 정수 변환
+    const code = parseInt(req.params.code, 10);
+
+    if (isNaN(code)) {
+      return res.status(400).json({
+        errorMessage: '유효하지 않은 아이템 코드입니다.',
+      });
+    }
+
     // 요청 데이터 검증
     const { value } = updateItemSchema.validate(req.body);
-
-    const { code, name, stats, price } = value;
+    const { name, stats } = value;
 
     // 아이템 존재 여부 확인
     const item = await prismaClient.item.findUnique({
@@ -174,30 +181,48 @@ router.put('/item', async (req, res, next) => {
     });
 
     if (!item) {
-      return res.status(400).json({
+      return res.status(404).json({
         errorMessage: '존재하지 않은 아이템 코드입니다.',
       });
     }
 
     // 아이템 수정
-    const updateItem = await prismaClient.item.update({
+    const updatedItem = await prismaClient.item.update({
       where: { code },
       data: {
         ...(name && { name }), // name이 존재하면 수정
         ...(stats && { stats }), // stats가 존재하면 수정
-        ...(price && { price }), // price가 존재하면 수정
       },
     });
 
     // 성공 응답
     res.status(200).json({
       message: '아이템 수정 성공',
-      updatedItem: {
-        code: updateItem.code,
-        name: updateItem.name,
-        stats: updateItem.stats,
-        price: updateItem.price,
+      name: updatedItem.name,
+      stat: updatedItem.stat,
+    });
+  } catch (err) {
+    // 에러 처리
+    next(err);
+  }
+});
+
+// 모든 아이템 조회 API
+router.get('/item', async (req, res, next) => {
+  try {
+    // 데이터베이스에서 모든 아이템 조회 (필요한 필드만 선택)
+    const items = await prismaClient.item.findMany({
+      select: {
+        code: true, // 아이템 코드
+        name: true, // 아이템 이름
+        price: true, // 아이템 가격
       },
+    });
+
+    // 성공 응답
+    res.status(200).json({
+      message: '아이템 조회 성공',
+      items,
     });
   } catch (err) {
     // 에러 처리

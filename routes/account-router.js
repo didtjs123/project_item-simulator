@@ -14,7 +14,7 @@ const createAccountSchema = Joi.object({
     .max(20)
     .pattern(/^[가-힣a-zA-Z0-9]+$/) // 한글, 영문, 숫자만 허용 (공백 제외)
     .required(),
-  password: Joi.string().min(8).max(20).required(),
+  password: Joi.string().min(6).max(20).required(),
   email: Joi.string().email().required(),
 });
 

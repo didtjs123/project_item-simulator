@@ -45,7 +45,7 @@ router.post('/character', async (req, res, next) => {
         userID,
         health: 100, // 테이블모델 디폴트값이지만 가독성을 위해 입력
         power: 100, // 이하동문
-        money: 0, // 이하동문
+        money: 10000, // 이하동문
       },
     });
 
@@ -70,63 +70,60 @@ const deleteCharacterSchema = Joi.object({
   password: Joi.string().required(),
   name: Joi.string().required(),
 });
+
 //캐릭터 삭제 API
-router.delete('/character', async (req, res, next) => {
+router.delete('/character/:name', async (req, res, next) => {
   try {
-    // 요청 데이터 검증
-    const validation = deleteCharacterSchema.validate(req.body);
-    const { value } = validation;
+    // 요청 데이터 검증 (Body에서 userID와 password를 검증)
+    const { value } = deleteCharacterSchema.validate(req.body);
 
-    // 요청 데이터
-    const { userID, password, name } = value;
+    const { userID, password } = value;
+    const { name } = req.params;
 
-    // 캐릭터 존재 여부 확인, jwt 토근 구현 이후 수정될 코드
+    // 캐릭터 존재 여부 확인
     const character = await prismaClient.character.findUnique({
       where: { name },
     });
-    const account = await prismaClient.account.findUnique({
-      where: { userID },
-    });
 
-    // 존재하지 않을 시 응답
     if (!character) {
-      return res.status(400).json({
+      return res.status(404).json({
         errorMessage: '삭제하려는 캐릭터를 찾을 수 없습니다.',
       });
     }
 
-    // 비밀번호를 틀릴 시 응답
-    if (account.password !== password) {
+    // 계정 정보 확인
+    const account = await prismaClient.account.findUnique({
+      where: { userID },
+    });
+
+    if (!account) {
       return res.status(400).json({
-        errorMessage: '비밀번호가 틀렸습니다.',
-        character: {
-          password1: character.password,
-          password2: password,
-        },
+        errorMessage: '존재하지 않는 계정입니다.',
       });
     }
 
-    // 요청데이터 userID와 캐릭터 테이블 userID가 다를 시 응답
-    if (character.userID !== userID) {
+    // 비밀번호 확인
+    if (account.password !== password) {
       return res.status(400).json({
-        errorMessage: '계정 정보가 일치하지 않습니다.',
+        errorMessage: '비밀번호가 일치하지 않습니다.',
+      });
+    }
+
+    // 계정과 캐릭터 소유 관계 확인
+    if (character.userID !== userID) {
+      return res.status(403).json({
+        errorMessage: '해당 캐릭터를 삭제할 권한이 없습니다.',
       });
     }
 
     // 캐릭터 삭제
     await prismaClient.character.delete({
-      where: { name: character.name },
+      where: { name },
     });
 
     // 성공 응답
     res.status(200).json({
       message: '캐릭터 삭제를 성공했습니다.',
-      deletedCharacter: {
-        name: character.name,
-        health: character.health,
-        power: character.power,
-        money: character.money,
-      },
     });
   } catch (err) {
     // 에러 처리
@@ -164,8 +161,6 @@ router.get('/character/:name', async (req, res, next) => {
         health: character.health,
         power: character.power,
         money: character.money,
-        inventory: character.inventory,
-        equipped: character.equipped,
       },
     });
   } catch (err) {
