@@ -16,9 +16,9 @@ datasource db {
 //계정 테이블 모델
 model Account {
   id          Int      @id @default(autoincrement()) @map("id")             
-  username    String   @unique                       @map("username")       
+  userID    String   @unique                       @map("userID")       
   password    String                               @map("password")      
-  email       String   @unique                       @map("email")          
+  email       String   @unique                            @map("email")          
   createdAt   DateTime @default(now())               @map("created_at")    
   updatedAt   DateTime @updatedAt                    @map("updated_at")      
   characters  Character[]                            
@@ -28,11 +28,11 @@ model Account {
 model Character {
   id          Int          @id @default(autoincrement()) @map("id")          
   name        String       @unique                       @map("name")       
-  health      Int          @default(500)                 @map("health")     
+  health      Int          @default(100)                 @map("health")     
   power       Int          @default(100)                 @map("power")      
-  money       Int          @default(10000)               @map("money")       
-  accountId   Int                                       @map("account_id")  
-  account     Account      @relation(fields: [accountId], references: [id]) 
+  money       Int          @default(10000)                   @map("money")       
+  userID      String                                     @map("userID")  
+  account     Account      @relation(fields: [userID], references: [userID],onDelete: Cascade) 
   inventory   Inventory[]                             
   equipped    EquippedItem[]                           
   createdAt   DateTime     @default(now())               @map("created_at") 
@@ -55,20 +55,20 @@ model Item {
 //인벤토리 테이블 모델
 model Inventory {
   id          Int          @id @default(autoincrement()) @map("id")          
-  characterId Int                                       @map("character_id")
-  itemId      Int                                       @map("item_id")     
-  character   Character     @relation(fields: [characterId], references: [id]) 
-  item        Item          @relation(fields: [itemId], references: [id])      
+  characterName String                                       @map("characterName")
+  itemCode      Int                                       @map("itemCode")     
+  name   Character     @relation(fields: [characterName], references: [name]) 
+  item        Item          @relation(fields: [itemCode], references: [code])      
   createdAt   DateTime      @default(now())               @map("created_at")  
 }
 
 //착용아이템 테이블 모델
 model EquippedItem {
   id          Int          @id @default(autoincrement()) @map("id")         
-  characterId Int                                       @map("character_id")
-  itemId      Int                                       @map("item_id")     
-  character   Character     @relation(fields: [characterId], references: [id]) 
-  item        Item          @relation(fields: [itemId], references: [id])     
+  characterName String                                       @map("characterName")
+  itemCode      Int                                       @map("itemCode")     
+  character   Character     @relation(fields: [characterName], references: [name]) 
+  item        Item          @relation(fields: [itemCode], references: [code])     
   createdAt   DateTime      @default(now())               @map("created_at") 
 }
 
