@@ -18,7 +18,7 @@ model Account {
   id          Int      @id @default(autoincrement()) @map("id")             
   userID    String   @unique                       @map("userID")       
   password    String                               @map("password")      
-  email       String                               @map("email")          
+  email       String   @unique                            @map("email")          
   createdAt   DateTime @default(now())               @map("created_at")    
   updatedAt   DateTime @updatedAt                    @map("updated_at")      
   characters  Character[]                            
@@ -32,7 +32,7 @@ model Character {
   power       Int          @default(100)                 @map("power")      
   money       Int          @default(0)                   @map("money")       
   userID      String                                     @map("userID")  
-  account     Account      @relation(fields: [userID], references: [userID]) 
+  account     Account      @relation(fields: [userID], references: [userID],onDelete: Cascade) 
   inventory   Inventory[]                             
   equipped    EquippedItem[]                           
   createdAt   DateTime     @default(now())               @map("created_at") 

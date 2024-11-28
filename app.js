@@ -3,6 +3,7 @@ import mysql from 'mysql2';
 import dotenv from 'dotenv';
 import accountRouter from './routes/account-router.js';
 import charaterRouter from './routes/charater-router.js';
+import itemRouter from './routes/item-router.js';
 import errorHandlerMiddleware from './middlewares/error-handler.middleware.js';
 //환경변수 로드
 dotenv.config();
@@ -34,7 +35,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //라우터 등록
-app.use('/api', [accountRouter, charaterRouter]);
+app.use('/api', [accountRouter, charaterRouter, itemRouter]);
 
 //에러 처리 미들웨어
 app.use(errorHandlerMiddleware);
